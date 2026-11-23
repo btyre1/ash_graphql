@@ -118,7 +118,7 @@ defmodule AshGraphql.GenericActionsTest do
     resp =
       """
       mutation {
-        randomPost {
+        randomPost(input: {}) {
           id
           comments{
             id
@@ -161,6 +161,23 @@ defmodule AshGraphql.GenericActionsTest do
     post_id = post.id
 
     assert %{data: %{"randomPost" => %{"id" => ^post_id, "comments" => []}}} = result
+  end
+
+  test "generic action mutation input is non-null" do
+    {:ok, %{data: data}} =
+      Absinthe.run(
+        """
+        { __schema { mutationType { fields { name args { name type { kind } } } } } }
+        """,
+        AshGraphql.Test.Schema
+      )
+
+    field =
+      Enum.find(data["__schema"]["mutationType"]["fields"], &(&1["name"] == "randomPost"))
+
+    input = Enum.find(field["args"], &(&1["name"] == "input"))
+
+    assert input["type"]["kind"] == "NON_NULL"
   end
 
   describe "generic action with args" do
@@ -209,12 +226,12 @@ defmodule AshGraphql.GenericActionsTest do
     end
 
     test "defines and uses an argument", %{expect_post: expect_post, expect_nil: expect_nil} do
-      expect_post.("(published: false)")
-      expect_nil.("(published: true)")
+      expect_post.("(published: false, input: {})")
+      expect_nil.("(published: true, input: {})")
     end
 
     test "does not require optional arguments", %{expect_post: expect_post} do
-      expect_post.("")
+      expect_post.("(input: {})")
     end
 
     test "works together with input object", %{expect_post: expect_post} do

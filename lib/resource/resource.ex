@@ -1512,7 +1512,7 @@ defmodule AshGraphql.Resource do
 
       input_type =
         String.to_atom("#{mutation.name}_input")
-        |> maybe_wrap_non_null(any_non_null_fields?)
+        |> maybe_wrap_non_null(any_non_null_fields? || mutation.type == :action)
 
       input_arg =
         %Absinthe.Blueprint.Schema.InputValueDefinition{
